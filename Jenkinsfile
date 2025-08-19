@@ -4,6 +4,7 @@ stage('Rollback Deploy') {
             sh '''
                 echo "Rolling back to pkg${TARGET_PKG}..."
 
+                # Stop and remove current container if exists
                 docker stop current-deployment || true
                 docker rm current-deployment || true
 
