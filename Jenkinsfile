@@ -1,17 +1,19 @@
 stage('Rollback Deploy') {
     steps {
-        sh '''
-            echo "Rolling back to pkg${TARGET_PKG}..."
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'suryavamsi6304', passwordVariable: 'Qwertz@2305')]) {
+            sh '''
+                echo "Rolling back to pkg${TARGET_PKG}..."
 
-            # Stop & clean up existing container
-            docker stop current-deployment || true
-            docker rm current-deployment || true
+                docker stop current-deployment || true
+                docker rm current-deployment || true
 
-            # Build image from Dockerfile in this repo
-            docker build -t pkg${TARGET_PKG}-complete:${BUILD_NUMBER} .
+                # Login to Docker registry
+                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
-            # Run container
-            docker run -d --name current-deployment -p 9000:80 pkg${TARGET_PKG}-complete:${BUILD_NUMBER}
-        '''
+                # Pull and run image from registry
+                docker pull my-dockerhub-org/pkg${TARGET_PKG}-complete:${BUILD_NUMBER}
+                docker run -d --name current-deployment -p 9000:80 my-dockerhub-org/pkg${TARGET_PKG}-complete:${BUILD_NUMBER}
+            '''
+        }
     }
 }
